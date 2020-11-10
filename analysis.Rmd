@@ -25,7 +25,7 @@ library(glmnet)
 # Fit linear regression model to area>0 since this is normally distributed
 area_posit <- fire[which(fire$area>0),]
 summary(area_posit)
-area_posit
+head(area_posit)
 
 mod_lin <- lm(logarea ~X+Y+month+day+FFMC+DMC+DC+ISI+temp+RH+wind+rain+as.factor(season.cat), data=area_posit[c(seq(1,12),15,16)])
 summary(mod_lin)  # DMC and DC are being statistically significant
