@@ -31,21 +31,28 @@
 Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
 
 ```markdown
-Syntax highlighted code block
+fire <- read.csv("forestfires.csv", header=TRUE, sep = ",")
+fire$season <- rep("spring", 517)
+for (i in 1:517){
+if (fire$month[i] %in% c("feb","jan","dec")) fire$season[i] <- "winter"
+if (fire$month[i] %in% c("oct","nov","sep")) fire$season[i] <- "autumn"
+if (fire$month[i] %in% c("aug","jul","jun")) fire$season[i] <- "summer"
+}
+fire$season <- as.factor(fire$season)
 
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
+fire$season.cat <- rep(0, 517)
+for (i in 1:517){
+  if (fire$season[i] == "summer") {
+    fire$season.cat[i] <- 1
+  }
+  if (fire$season[i] == "autumn") {
+    fire$season.cat[i] <- 2
+  }
+  if (fire$season[i] =="winter") {
+    fire$season.cat[i] <- 3
+  }
+}
+head(fire)
 ```
 
 For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
