@@ -1,0 +1,74 @@
+---
+title: "Analysis"
+---
+```{r setup, include=FALSE}
+library(tidyverse)
+library(dplyr)
+library(broom)
+library(olsrr)
+library(ggplot2)
+library(VGAM)
+library(nnet)
+library(DescTools)
+library(ResourceSelection)
+library(LogisticDx)
+library(knitr)
+library(mice)
+library(caret)
+library(leaps)
+library(MASS)
+library(glmnet)
+```
+
+## Linear Regression Analysis
+```{r}
+# Fit linear regression model to area>0 since this is normally distributed
+area_posit <- fire[which(fire$area>0),]
+summary(area_posit)
+area_posit
+
+mod_lin <- lm(logarea ~X+Y+month+day+FFMC+DMC+DC+ISI+temp+RH+wind+rain+as.factor(season.cat), data=area_posit[c(seq(1,12),15,16)])
+summary(mod_lin)  # DMC and DC are being statistically significant
+
+#Fit linear regression again, now without the influential points and outliers
+mod_lin2 <- lm(logarea ~ ., data=dat[c(seq(1,12),15,16)])
+summary(mod_lin2)
+
+plot(mod_lin2, which=c(1,2,3))
+
+# Linear model with forward selection & backward elimination based on AIC
+full.model <- lm(logarea ~., data = dat[c(seq(1,12),15,16)])
+step.forw <- step(lm(logarea~1, data=dat[c(seq(1,12),15,16)]), ~X+Y+month+day+FFMC+DMC+DC+ISI+temp+RH+wind+rain, direction = "forward")
+step.back <- step(full.model, direction = "backward")
+summary(step.forw)
+summary(step.back)
+
+table1<- matrix(c(summary(mod_lin)$r.squared, summary(mod_lin)$adj.r.squared, sqrt(mean(mod_lin$residuals^2)),AIC(mod_lin), BIC(mod_lin),
+                  summary(mod_lin2)$r.squared, summary(mod_lin2)$adj.r.squared, sqrt(mean(mod_lin2$residuals^2)),AIC(mod_lin2), BIC(mod_lin2),
+                  summary(step.forw)$r.squared, summary(step.forw)$adj.r.squared, sqrt(mean(step.forw$residuals^2)),AIC(step.forw), BIC(step.forw),
+                  summary(step.back)$r.squared, summary(step.back)$adj.r.squared, sqrt(mean(step.back$residuals^2)),AIC(step.back), BIC(step.back)), ncol=5,nrow=4, byrow=TRUE)
+colnames(table1)<- c("R^2", "Adjusted R^2", "Square root of MSE","AIC", "BIC")
+rownames(table1)<- c("logarea ~.",
+                     "logarea~., (w/o influential points)",
+                     "model with forward selection based on AIC",
+                     "model with backward elimination based on AIC")
+table1 <- as.table(table1)
+kable(table1)
+```
+
+
+
+## Logistic Regression
+```{r}
+# Fit Logistic Regression
+lg_burn <- glm(burn ~ X+Y+month+day+FFMC+DMC+DC+ISI+temp+RH+wind+rain, family=binomial(),data=new_dat)
+summary(lg_burn)
+lg_burn2 <- glm(burn ~X+Y+month+day+FFMC+DMC+DC+ISI+temp+I(temp^2)+RH+wind+rain, family=binomial(), data=new_dat)
+summary(lg_burn2)
+
+hoslem.test(new_dat$burn, fitted(lg_burn), g=10)  #not a poor fit (small P-value, poor fit, H0:good fit)
+hoslem.test(new_dat$burn, fitted(lg_burn2), g=10) #not a poor fit
+
+gof(lg_burn)  #AUC=64.0%
+gof(lg_burn2) #AUC=64.7%
+```

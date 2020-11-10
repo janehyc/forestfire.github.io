@@ -1,0 +1,14 @@
+name: "BST 260 Group Project"
+navbar:
+  title: "Forest Fire"
+  left:
+    - text: "Introduction"
+      href: index.html
+    - text: "Data"
+      href: about.html
+    - text: "Analysis"
+      href: analysis.html
+output:
+  html_document:
+    theme: cosmo
+    highlight: textmate
